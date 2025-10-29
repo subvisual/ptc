@@ -24,7 +24,10 @@ defmodule PtcWeb.CalendarLive do
   def handle_event("select_date", %{"date" => date_string}, socket) do
     case Date.from_iso8601(date_string) do
       {:ok, date} ->
-        {:noreply, assign(socket, :selected_date, date)}
+        socket
+        |> assign(:selected_date, date)
+        |> update_events_from_date(date)
+        |> then(fn socket -> {:noreply, socket} end)
 
       _ ->
         {:noreply, socket}
@@ -79,6 +82,30 @@ defmodule PtcWeb.CalendarLive do
 
     month_events = get_month_events(all_events, year, month)
     assign(socket, :upcoming_events, month_events)
+  end
+
+  defp update_events_from_date(socket, selected_date) do
+    year = socket.assigns.year
+    month = socket.assigns.month
+    all_events = socket.assigns[:all_events] || Events.list_events()
+
+    last_day = Date.end_of_month(Date.new!(year, month, 1))
+
+    events_from_date =
+      all_events
+      |> Enum.filter(fn event ->
+        if event.start_date do
+          end_date = event.end_date || event.start_date
+
+          (Date.compare(event.start_date, last_day) != :gt &&
+             Date.compare(end_date, selected_date) != :lt)
+        else
+          false
+        end
+      end)
+      |> Enum.sort_by(fn event -> event.start_date end, Date)
+
+    assign(socket, :upcoming_events, events_from_date)
   end
 
   defp get_month_events(events, year, month) do
