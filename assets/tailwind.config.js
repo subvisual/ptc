@@ -16,11 +16,26 @@ module.exports = {
       colors: {
         brand: "#FD4F00",
         primary: "#3b82f6",
-        background: "#0f172a",
-        "calendar-bg": "#1e293b",
-        "calendar-border": "#334155",
-        "calendar-text": "#cbd5e1",
-        "calendar-muted": "#64748b",
+        background: {
+          light: "#ffffff",
+          dark: "#1a1d29"
+        },
+        "calendar-bg": {
+          light: "#ffffff",
+          dark: "#1e293b"
+        },
+        "calendar-border": {
+          light: "#e5e7eb",
+          dark: "#334155"
+        },
+        "calendar-text": {
+          light: "#111827",
+          dark: "#ffffff"
+        },
+        "calendar-muted": {
+          light: "#6b7280",
+          dark: "#94a3b8"
+        },
       }
     },
   },

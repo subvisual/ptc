@@ -15,6 +15,7 @@ defmodule PtcWeb.CalendarLive do
       |> assign(:current_month, today.month)
       |> assign(:selected_date, today)
       |> assign(:selected_event, nil)
+      |> assign(:theme, "light")
       |> load_events()
 
     {:ok, socket}
@@ -63,6 +64,12 @@ defmodule PtcWeb.CalendarLive do
   @impl true
   def handle_event("close_details", _params, socket) do
     {:noreply, assign(socket, :selected_event, nil)}
+  end
+
+  @impl true
+  def handle_event("toggle_theme", _params, socket) do
+    new_theme = if socket.assigns.theme == "light", do: "dark", else: "light"
+    {:noreply, assign(socket, :theme, new_theme)}
   end
 
   defp load_events(socket) do
@@ -224,6 +231,76 @@ defmodule PtcWeb.CalendarLive do
 
       true ->
         :single
+    end
+  end
+
+  defp theme_class(base, theme) do
+    case theme do
+      "light" -> "#{base}-light"
+      "dark" -> "#{base}-dark"
+    end
+  end
+
+  defp bg_class(theme) do
+    case theme do
+      "light" -> "bg-background-light"
+      "dark" -> "bg-background-dark"
+    end
+  end
+
+  defp calendar_bg_class(theme) do
+    case theme do
+      "light" -> "bg-calendar-bg-light"
+      "dark" -> "bg-calendar-bg-dark"
+    end
+  end
+
+  defp calendar_border_class(theme) do
+    case theme do
+      "light" -> "border-calendar-border-light"
+      "dark" -> "border-calendar-border-dark"
+    end
+  end
+
+  defp calendar_text_class(theme) do
+    case theme do
+      "light" -> "text-calendar-text-light"
+      "dark" -> "text-calendar-text-dark"
+    end
+  end
+
+  defp calendar_muted_class(theme) do
+    case theme do
+      "light" -> "text-calendar-muted-light"
+      "dark" -> "text-calendar-muted-dark"
+    end
+  end
+
+  defp hover_bg_class(theme) do
+    case theme do
+      "light" -> "hover:bg-calendar-border-light"
+      "dark" -> "hover:bg-calendar-border-dark"
+    end
+  end
+
+  defp hover_text_class(theme) do
+    case theme do
+      "light" -> "hover:text-calendar-text-light"
+      "dark" -> "hover:text-calendar-text-dark"
+    end
+  end
+
+  defp selected_bg_class(theme) do
+    case theme do
+      "light" -> "bg-calendar-text-light text-calendar-bg-light"
+      "dark" -> "bg-calendar-text-dark text-calendar-bg-dark"
+    end
+  end
+
+  defp ring_class(theme) do
+    case theme do
+      "light" -> "ring-calendar-text-light text-calendar-text-light"
+      "dark" -> "ring-calendar-text-dark text-calendar-text-dark"
     end
   end
 end

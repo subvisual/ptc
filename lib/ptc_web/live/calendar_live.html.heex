@@ -1,24 +1,35 @@
-<div class="h-screen flex bg-background">
-  <div class="flex-1 overflow-auto p-8">
-    <h1 class="text-xl font-semibold mb-8 text-white">
-      Upcoming events
-    </h1>
+<div class={"h-screen flex #{bg_class(@theme)}"}>
+  <div class={"flex-1 overflow-auto p-8 #{calendar_bg_class(@theme)}"}>
+    <div class="flex items-center justify-between mb-8">
+      <h1 class={"text-2xl font-semibold #{calendar_text_class(@theme)}"}>
+        Upcoming events
+      </h1>
+
+      <button
+        phx-click="toggle_theme"
+        class={"p-2 rounded-lg #{hover_bg_class(@theme)} transition-colors"}
+      >
+        <%= if @theme == "light" do %>
+          <svg class={"w-5 h-5 #{calendar_text_class(@theme)}"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+        <% else %>
+          <svg class={"w-5 h-5 #{calendar_text_class(@theme)}"} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+        <% end %>
+      </button>
+    </div>
 
     <div class="space-y-6">
       <%= for event <- @upcoming_events do %>
         <div class="flex items-start gap-4">
           <div class="flex-1">
-            <h3 class="text-white font-medium mb-2">{event.name}</h3>
+            <h3 class={"font-medium mb-1 #{calendar_text_class(@theme)}"}>{event.name}</h3>
 
-            <div class="flex items-center gap-4 text-sm text-calendar-muted">
+            <div class={"flex items-center gap-4 text-sm #{calendar_muted_class(@theme)}"}>
               <%= if event.start_date do %>
                 <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" stroke-width="2" />
-                    <line x1="16" y1="2" x2="16" y2="6" stroke-width="2" />
-                    <line x1="8" y1="2" x2="8" y2="6" stroke-width="2" />
-                    <line x1="3" y1="10" x2="21" y2="10" stroke-width="2" />
-                  </svg>
                   <%= if event.end_date && Date.compare(event.start_date, event.end_date) != :eq do %>
                     {Calendar.strftime(event.start_date, "%B %-d")} - {Calendar.strftime(
                       event.end_date,
@@ -29,39 +40,19 @@
                   <% end %>
                 </div>
               <% end %>
-
-              <%= if event.location do %>
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                    />
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                  </svg>
-                  {event.location}
-                </div>
-              <% end %>
             </div>
           </div>
         </div>
       <% end %>
     </div>
   </div>
-  
+
 <!-- Right side: Calendar -->
-  <div class="w-96 bg-calendar-bg border-l border-calendar-border p-6 flex flex-col">
+  <div class={"w-96 #{calendar_bg_class(@theme)} border-l #{calendar_border_class(@theme)} p-6 flex flex-col"}>
     <div class="flex items-center justify-between mb-4">
       <button
         phx-click="prev_month"
-        class="text-calendar-muted hover:text-white transition-colors p-1"
+        class={"#{calendar_muted_class(@theme)} #{hover_text_class(@theme)} transition-colors p-1"}
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -73,13 +64,13 @@
         </svg>
       </button>
 
-      <h2 class="text-base font-medium text-white">
-        {month_name(@month)}
+      <h2 class={"text-base font-medium #{calendar_text_class(@theme)}"}>
+        {month_name(@month)} {String.slice(Integer.to_string(@year), -4..-1)}
       </h2>
 
       <button
         phx-click="next_month"
-        class="text-calendar-muted hover:text-white transition-colors p-1"
+        class={"#{calendar_muted_class(@theme)} #{hover_text_class(@theme)} transition-colors p-1"}
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
@@ -89,7 +80,7 @@
 
     <div class="grid grid-cols-7 gap-1 mb-2">
       <%= for day <- ["M", "T", "W", "T", "F", "S", "S"] do %>
-        <div class="text-center text-xs text-calendar-muted font-medium">
+        <div class={"text-center text-xs #{calendar_muted_class(@theme)} font-medium"}>
           {day}
         </div>
       <% end %>
@@ -103,14 +94,15 @@
             phx-value-date={Date.to_string(day)}
             class={[
               "aspect-square flex items-center justify-center rounded-full cursor-pointer transition-colors text-xs",
-              Date.compare(day, @selected_date) == :eq && "bg-white text-background font-bold",
+              Date.compare(day, @selected_date) == :eq && selected_bg_class(@theme),
               Date.compare(day, @selected_date) != :eq && Date.compare(day, @current_date) == :eq &&
-                "ring-2 ring-white text-calendar-text font-bold",
+                "ring-2 #{ring_class(@theme)} font-bold",
               Date.compare(day, @selected_date) != :eq && Date.compare(day, @current_date) != :eq &&
-                Map.has_key?(@events_by_date, Date.to_string(day)) && "text-primary",
+                Map.has_key?(@events_by_date, Date.to_string(day)) &&
+                "#{calendar_text_class(@theme)} font-medium",
               Date.compare(day, @selected_date) != :eq && Date.compare(day, @current_date) != :eq &&
                 !Map.has_key?(@events_by_date, Date.to_string(day)) &&
-                "text-calendar-muted hover:text-calendar-text",
+                "#{calendar_muted_class(@theme)} #{hover_text_class(@theme)}",
               day.month != @month && "opacity-50"
             ]}
           >
