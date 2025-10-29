@@ -1,0 +1,117 @@
+<div class="h-screen flex bg-background">
+  <div class="w-4/5 flex flex-col items-center overflow-auto p-8">
+    <div class="max-w-5xl w-full">
+      <%= for month <- 1..12 do %>
+        <div class="mb-16" id={"month-#{month}"} phx-hook={month == @current_month && "ScrollToMonth"}>
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-semibold text-calendar-text">
+              {month_name(month)} {@year}
+            </h2>
+          </div>
+
+          <div class="grid grid-cols-7 gap-4">
+          <%= for day <- ["M", "T", "W", "T", "F", "S", "S"] do %>
+            <div class="text-center text-base text-calendar-muted font-medium">
+              {day}
+            </div>
+          <% end %>
+
+          <%= for day <- calendar_days(@year, month) do %>
+            <%= if day do %>
+              <div
+                phx-click="select_date"
+                phx-value-date={Date.to_string(day)}
+                class={[
+                  "min-h-[140px] p-3 rounded-lg cursor-pointer transition-colors border",
+                  Date.compare(day, @selected_date) == :eq && "bg-calendar-bg border-primary ring-2 ring-primary",
+                  Date.compare(day, @selected_date) != :eq && Date.compare(day, @current_date) == :eq && "bg-calendar-bg border-primary border-2",
+                  Date.compare(day, @selected_date) != :eq && Date.compare(day, @current_date) != :eq && "bg-calendar-bg border-calendar-border hover:border-calendar-muted",
+                ]}
+              >
+                <div class={[
+                  "text-base mb-2",
+                  Date.compare(day, @selected_date) == :eq && "font-bold text-calendar-text",
+                  Date.compare(day, @selected_date) != :eq && Date.compare(day, @current_date) == :eq && "font-bold text-calendar-text",
+                  Date.compare(day, @selected_date) != :eq && Date.compare(day, @current_date) != :eq && "text-calendar-muted"
+                ]}>
+                  {day.day}
+                </div>
+
+                <%= if events = Map.get(@events_by_date, Date.to_string(day)) do %>
+                  <div class="space-y-1.5">
+                    <%= for {event, index} <- Enum.take(events, 3) |> Enum.with_index() do %>
+                      <div class={[
+                        "text-sm truncate px-2 py-1 text-white font-medium relative",
+                        event_color(index),
+                        case event_position(event, day) do
+                          :single -> "rounded"
+                          :start -> "rounded-l"
+                          :end -> "rounded-r"
+                          :middle -> ""
+                        end
+                      ]}>
+                        <%= if event_position(event, day) != :single do %>
+                          <span class="absolute -right-px top-0 bottom-0 w-px bg-white/30"></span>
+                        <% end %>
+                        {event.name}
+                      </div>
+                    <% end %>
+                    <%= if length(events) > 3 do %>
+                      <div class="text-xs text-calendar-muted">
+                        +{length(events) - 3} more
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <div></div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+    </div>
+  </div>
+
+  <div class="w-1/5 bg-calendar-bg border-l border-calendar-border p-8 overflow-auto">
+    <div class="mb-6">
+      <h1 class="text-2xl font-semibold mb-2 text-calendar-text">
+        Schedule for {Calendar.strftime(@selected_date, "%B %d, %Y")}
+      </h1>
+      <.link navigate={~p"/events"} class="text-sm text-primary hover:text-primary/80 font-medium">
+        Manage Events →
+      </.link>
+    </div>
+
+    <%= if events = Map.get(@events_by_date, Date.to_string(@selected_date)) do %>
+      <div class="space-y-3">
+        <%= for {event, index} <- Enum.with_index(events) do %>
+          <button
+            phx-value-id={event.id}
+            class={[
+              "w-full text-left p-4 rounded-lg transition-all border bg-background",
+              event_color(index)
+            ]}
+          >
+            <div class={[
+              "font-medium text-lg mb-1 text-white"
+            ]}>{event.name}</div>
+            <%= if event.location do %>
+              <div class="text-sm text-white/80">{event.location}</div>
+            <% end %>
+            <%= if event.start_date && event.end_date do %>
+              <div class="text-sm mt-2 text-white/70">
+                {Calendar.strftime(event.start_date, "%B %d")} - {Calendar.strftime(event.end_date, "%B %d, %Y")}
+              </div>
+            <% end %>
+          </button>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-calendar-muted text-center py-12">
+        No events scheduled for this day
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -1,0 +1,47 @@
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <.header>
+    Listing Events
+    <:actions>
+      <.link patch={~p"/events/new"}>
+        <.button>New Event</.button>
+      </.link>
+      <.link navigate={~p"/"} class="text-sm text-gray-600 hover:text-gray-900">
+        ← Back to Calendar
+      </.link>
+    </:actions>
+  </.header>
+
+  <.table
+    id="events"
+    rows={@streams.events}
+    row_click={fn {_id, event} -> JS.navigate(~p"/events/#{event}/edit") end}
+  >
+    <:col :let={{_id, event}} label="Name">{event.name}</:col>
+    <:col :let={{_id, event}} label="Location">{event.location}</:col>
+    <:col :let={{_id, event}} label="Start date">{event.start_date}</:col>
+    <:col :let={{_id, event}} label="End date">{event.end_date}</:col>
+    <:col :let={{_id, event}} label="Is paid">{if event.is_paid, do: "Yes", else: "No"}</:col>
+    <:action :let={{id, event}}>
+      <div class="sr-only">
+        <.link navigate={~p"/events/#{event}/edit"}>Edit</.link>
+      </div>
+      <.link
+        phx-click={JS.push("delete", value: %{id: event.id}) |> hide("##{id}")}
+        data-confirm="Are you sure?"
+      >
+        Delete
+      </.link>
+    </:action>
+  </.table>
+</div>
+
+<.modal :if={@live_action in [:new, :edit]} id="event-modal" show on_cancel={JS.patch(~p"/events")}>
+  <.live_component
+    module={PtcWeb.EventLive.FormComponent}
+    id={@event.id || :new}
+    title={@page_title}
+    action={@live_action}
+    event={@event}
+    patch={~p"/events"}
+  />
+</.modal>
