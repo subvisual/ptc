@@ -1,4 +1,4 @@
-# Ptc
+# Portuguese Tech Communities
 
 To start your Phoenix server:
 
