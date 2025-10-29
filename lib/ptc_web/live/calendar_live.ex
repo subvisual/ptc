@@ -11,6 +11,7 @@ defmodule PtcWeb.CalendarLive do
       socket
       |> assign(:current_date, today)
       |> assign(:year, today.year)
+      |> assign(:month, today.month)
       |> assign(:current_month, today.month)
       |> assign(:selected_date, today)
       |> assign(:selected_event, nil)
@@ -31,6 +32,26 @@ defmodule PtcWeb.CalendarLive do
   end
 
   @impl true
+  def handle_event("prev_month", _params, socket) do
+    new_date = Date.add(Date.new!(socket.assigns.year, socket.assigns.month, 1), -1)
+
+    socket
+    |> assign(year: new_date.year, month: new_date.month)
+    |> update_month_events()
+    |> then(fn socket -> {:noreply, socket} end)
+  end
+
+  @impl true
+  def handle_event("next_month", _params, socket) do
+    new_date = Date.add(Date.end_of_month(Date.new!(socket.assigns.year, socket.assigns.month, 1)), 1)
+
+    socket
+    |> assign(year: new_date.year, month: new_date.month)
+    |> update_month_events()
+    |> then(fn socket -> {:noreply, socket} end)
+  end
+
+  @impl true
   def handle_event("select_event", %{"id" => id}, socket) do
     event = Events.get_event!(id)
     {:noreply, assign(socket, :selected_event, event)}
@@ -45,7 +66,37 @@ defmodule PtcWeb.CalendarLive do
     events = Events.list_events()
     events_by_date = group_events_by_date(events)
 
-    assign(socket, :events_by_date, events_by_date)
+    socket
+    |> assign(:events_by_date, events_by_date)
+    |> assign(:all_events, events)
+    |> update_month_events()
+  end
+
+  defp update_month_events(socket) do
+    year = socket.assigns.year
+    month = socket.assigns.month
+    all_events = socket.assigns[:all_events] || Events.list_events()
+
+    month_events = get_month_events(all_events, year, month)
+    assign(socket, :upcoming_events, month_events)
+  end
+
+  defp get_month_events(events, year, month) do
+    first_day = Date.new!(year, month, 1)
+    last_day = Date.end_of_month(first_day)
+
+    events
+    |> Enum.filter(fn event ->
+      if event.start_date do
+        end_date = event.end_date || event.start_date
+
+        (Date.compare(event.start_date, last_day) != :gt &&
+           Date.compare(end_date, first_day) != :lt)
+      else
+        false
+      end
+    end)
+    |> Enum.sort_by(fn event -> event.start_date end, Date)
   end
 
   defp group_events_by_date(events) do
