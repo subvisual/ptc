@@ -47,7 +47,8 @@ defmodule PtcWeb.CalendarLive do
 
   @impl true
   def handle_event("next_month", _params, socket) do
-    new_date = Date.add(Date.end_of_month(Date.new!(socket.assigns.year, socket.assigns.month, 1)), 1)
+    new_date =
+      Date.add(Date.end_of_month(Date.new!(socket.assigns.year, socket.assigns.month, 1)), 1)
 
     socket
     |> assign(year: new_date.year, month: new_date.month)
@@ -104,8 +105,8 @@ defmodule PtcWeb.CalendarLive do
         if event.start_date do
           end_date = event.end_date || event.start_date
 
-          (Date.compare(event.start_date, last_day) != :gt &&
-             Date.compare(end_date, selected_date) != :lt)
+          Date.compare(event.start_date, last_day) != :gt &&
+            Date.compare(end_date, selected_date) != :lt
         else
           false
         end
@@ -124,8 +125,8 @@ defmodule PtcWeb.CalendarLive do
       if event.start_date do
         end_date = event.end_date || event.start_date
 
-        (Date.compare(event.start_date, last_day) != :gt &&
-           Date.compare(end_date, first_day) != :lt)
+        Date.compare(event.start_date, last_day) != :gt &&
+          Date.compare(end_date, first_day) != :lt
       else
         false
       end
