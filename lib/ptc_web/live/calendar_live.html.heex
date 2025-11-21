@@ -64,9 +64,17 @@
         </svg>
       </button>
 
-      <h2 class={"text-base font-medium #{calendar_text_class(@theme)}"}>
-        {month_name(@month)} {String.slice(Integer.to_string(@year), -4..-1)}
-      </h2>
+      <div class="flex items-center gap-2">
+        <h2 class={"text-base font-medium #{calendar_text_class(@theme)}"}>
+          {month_name(@month)} {String.slice(Integer.to_string(@year), -4..-1)}
+        </h2>
+        <button
+          phx-click="go_to_today"
+          class={"text-xs px-2 py-1 rounded #{hover_bg_class(@theme)} #{calendar_muted_class(@theme)} #{hover_text_class(@theme)} transition-colors"}
+        >
+          Today
+        </button>
+      </div>
 
       <button
         phx-click="next_month"

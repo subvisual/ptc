@@ -57,6 +57,17 @@ defmodule PtcWeb.CalendarLive do
   end
 
   @impl true
+  def handle_event("go_to_today", _params, socket) do
+    current_date = socket.assigns.current_date
+
+    socket
+    |> assign(year: current_date.year, month: current_date.month)
+    |> assign(:selected_date, current_date)
+    |> update_events_from_date(current_date)
+    |> then(fn socket -> {:noreply, socket} end)
+  end
+
+  @impl true
   def handle_event("select_event", %{"id" => id}, socket) do
     event = Events.get_event!(id)
     {:noreply, assign(socket, :selected_event, event)}
