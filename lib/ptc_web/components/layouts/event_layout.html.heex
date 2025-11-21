@@ -1,0 +1,231 @@
+<div class={[
+  "flex h-screen",
+  assigns[:theme] == "dark" && "bg-background-dark" || "bg-background-light"
+]}>
+  <!-- Left Sidebar - 320px fixed -->
+  <div class={[
+    "w-80 shadow-lg overflow-auto",
+    assigns[:theme] == "dark" && "bg-calendar-bg-dark border-r border-calendar-border-dark" || "bg-calendar-bg-light"
+  ]}>
+    <div class="p-6 flex flex-col gap-6">
+      <!-- Header -->
+      <div class="flex flex-col gap-2">
+        <h1 class={[
+          "text-2xl font-medium",
+          assigns[:theme] == "dark" && "text-calendar-text-dark" || "text-calendar-text-light"
+        ]}>Events</h1>
+        <p class={[
+          "text-base",
+          assigns[:theme] == "dark" && "text-calendar-muted-dark" || "text-calendar-muted-light"
+        ]}>Discover and explore events</p>
+      </div>
+
+      <!-- Search -->
+      <div class="flex flex-col gap-2">
+        <label class={[
+          "text-sm",
+          assigns[:theme] == "dark" && "text-calendar-text-dark" || "text-calendar-text-light"
+        ]}>Search</label>
+        <form phx-change="search">
+          <div class="relative">
+            <.icon
+              name="hero-magnifying-glass"
+              class={[
+                "absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5",
+                assigns[:theme] == "dark" && "text-calendar-muted-dark" || "text-slate-400"
+              ]}
+            />
+            <input
+              type="text"
+              placeholder="Search events..."
+              value={assigns[:search_query] || ""}
+              name="query"
+              class={[
+                "w-full h-12 pl-10 pr-4 border rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-blue-500",
+                assigns[:theme] == "dark" && "bg-calendar-bg-dark border-calendar-border-dark text-calendar-text-dark placeholder:text-calendar-muted-dark" || "bg-white border-slate-200 text-slate-900 placeholder:text-slate-400"
+              ]}
+            />
+          </div>
+        </form>
+      </div>
+
+      <!-- Categories -->
+      <div class="flex flex-col gap-2">
+        <label class={[
+          "text-sm",
+          assigns[:theme] == "dark" && "text-calendar-text-dark" || "text-calendar-text-light"
+        ]}>Categories</label>
+        <div class="flex flex-col gap-2">
+          <button
+            phx-click="set_category"
+            phx-value-category=""
+            class={[
+              "h-10 px-4 text-left text-base rounded-lg",
+              if(is_nil(assigns[:selected_category]),
+                do: "bg-blue-600 text-white shadow-sm",
+                else: if(assigns[:theme] == "dark",
+                  do: "bg-calendar-border-dark text-calendar-text-dark hover:bg-calendar-border-dark/80",
+                  else: "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                )
+              )
+            ]}
+          >
+            All
+          </button>
+          <%= for category <- assigns[:categories] || [] do %>
+            <button
+              phx-click="set_category"
+              phx-value-category={category}
+              class={[
+                "h-10 px-4 text-left text-base rounded-lg",
+                if(assigns[:selected_category] == category,
+                  do: "bg-blue-600 text-white shadow-sm",
+                  else: if(assigns[:theme] == "dark",
+                    do: "bg-calendar-border-dark text-calendar-text-dark hover:bg-calendar-border-dark/80",
+                    else: "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  )
+                )
+              ]}
+            >
+              <%= category %>
+            </button>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Time Period -->
+      <div class="flex flex-col gap-2">
+        <label class={[
+          "text-sm",
+          assigns[:theme] == "dark" && "text-calendar-text-dark" || "text-calendar-text-light"
+        ]}>Time Period</label>
+        <div class="flex flex-col gap-2">
+          <button
+            phx-click="set_time_period"
+            phx-value-period="all"
+            class={[
+              "h-10 px-4 text-left text-base rounded-lg",
+              if(@time_period == :all,
+                do: "bg-blue-600 text-white",
+                else: if(assigns[:theme] == "dark",
+                  do: "bg-calendar-border-dark text-calendar-text-dark hover:bg-calendar-border-dark/80",
+                  else: "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                )
+              )
+            ]}
+          >
+            All Events
+          </button>
+          <button
+            phx-click="set_time_period"
+            phx-value-period="upcoming"
+            class={[
+              "h-10 px-4 text-left text-base rounded-lg",
+              if(@time_period == :upcoming,
+                do: "bg-blue-600 text-white",
+                else: if(assigns[:theme] == "dark",
+                  do: "bg-calendar-border-dark text-calendar-text-dark hover:bg-calendar-border-dark/80",
+                  else: "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                )
+              )
+            ]}
+          >
+            Upcoming
+          </button>
+          <button
+            phx-click="set_time_period"
+            phx-value-period="past"
+            class={[
+              "h-10 px-4 text-left text-base rounded-lg",
+              if(@time_period == :past,
+                do: "bg-blue-600 text-white",
+                else: if(assigns[:theme] == "dark",
+                  do: "bg-calendar-border-dark text-calendar-text-dark hover:bg-calendar-border-dark/80",
+                  else: "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                )
+              )
+            ]}
+          >
+            Past
+          </button>
+        </div>
+      </div>
+
+      <!-- View Mode -->
+      <div class="flex flex-col gap-2">
+        <label class={[
+          "text-sm",
+          assigns[:theme] == "dark" && "text-calendar-text-dark" || "text-calendar-text-light"
+        ]}>View Mode</label>
+        <div class="flex flex-col gap-2">
+          <button
+            phx-click="set_view_mode"
+            phx-value-mode="list"
+            class={[
+              "h-10 px-4 text-left text-base rounded-lg flex items-center gap-2",
+              if(@view_mode == :list,
+                do: "bg-blue-600 text-white shadow-sm",
+                else: if(assigns[:theme] == "dark",
+                  do: "bg-calendar-border-dark text-calendar-text-dark hover:bg-calendar-border-dark/80",
+                  else: "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                )
+              )
+            ]}
+          >
+            <.icon name="hero-list-bullet" class="w-4 h-4" />
+            <span>List View</span>
+          </button>
+          <button
+            phx-click="set_view_mode"
+            phx-value-mode="calendar"
+            class={[
+              "h-10 px-4 text-left text-base rounded-lg flex items-center gap-2",
+              if(@view_mode == :calendar,
+                do: "bg-blue-600 text-white shadow-sm",
+                else: if(assigns[:theme] == "dark",
+                  do: "bg-calendar-border-dark text-calendar-text-dark hover:bg-calendar-border-dark/80",
+                  else: "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                )
+              )
+            ]}
+          >
+            <.icon name="hero-calendar" class="w-4 h-4" />
+            <span>Calendar View</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Theme Toggle -->
+      <div class={[
+        "pt-4 border-t",
+        assigns[:theme] == "dark" && "border-calendar-border-dark" || "border-slate-200"
+      ]}>
+        <button
+          phx-click="toggle_theme"
+          class={[
+            "w-full h-10 px-4 text-left text-base rounded-lg transition-colors flex items-center gap-2",
+            assigns[:theme] == "dark" && "bg-calendar-border-dark text-calendar-text-dark hover:bg-calendar-border-dark/80" || "bg-slate-100 text-slate-700 hover:bg-slate-200"
+          ]}
+        >
+          <%= if assigns[:theme] == "dark" do %>
+            <.icon name="hero-sun" class="w-4 h-4" />
+            <span>Light Mode</span>
+          <% else %>
+            <.icon name="hero-moon" class="w-4 h-4" />
+            <span>Dark Mode</span>
+          <% end %>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class={[
+    "flex-1 overflow-auto",
+    assigns[:theme] == "dark" && "bg-background-dark" || "bg-background-light"
+  ]}>
+    <div class="p-8">
+      <%= @inner_content %>
+    </div>
+  </div>
+</div>

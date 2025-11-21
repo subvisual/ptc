@@ -6,6 +6,18 @@ defmodule PtcWeb.CalendarLive do
   @impl true
   def mount(_params, _session, socket) do
     today = Date.utc_today()
+    events = Events.list_events()
+
+    {upcoming_events, past_events} =
+      Enum.split_with(events, fn event ->
+        if event.start_date do
+          Date.compare(event.start_date, today) != :lt
+        else
+          true
+        end
+      end)
+
+    categories = extract_categories(events)
 
     socket =
       socket
@@ -16,9 +28,16 @@ defmodule PtcWeb.CalendarLive do
       |> assign(:selected_date, today)
       |> assign(:selected_event, nil)
       |> assign(:theme, "light")
+      |> assign(:view_mode, :list)
+      |> assign(:time_period, :all)
+      |> assign(:search_query, "")
+      |> assign(:selected_category, nil)
+      |> assign(:categories, categories)
+      |> assign(:upcoming_events, upcoming_events)
+      |> assign(:past_events, past_events)
       |> load_events()
 
-    {:ok, socket}
+    {:ok, socket, layout: {PtcWeb.Layouts, :event_layout}}
   end
 
   @impl true
@@ -84,6 +103,93 @@ defmodule PtcWeb.CalendarLive do
     {:noreply, assign(socket, :theme, new_theme)}
   end
 
+  @impl true
+  def handle_event("set_time_period", %{"period" => period}, socket) do
+    time_period = String.to_existing_atom(period)
+    {:noreply, assign(socket, :time_period, time_period)}
+  end
+
+  @impl true
+  def handle_event("set_view_mode", %{"mode" => mode}, socket) do
+    view_mode = String.to_existing_atom(mode)
+    {:noreply, assign(socket, :view_mode, view_mode)}
+  end
+
+  @impl true
+  def handle_event("search", %{"query" => search_query}, socket) do
+    socket =
+      socket
+      |> assign(:search_query, search_query)
+      |> filter_events()
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("set_category", %{"category" => category}, socket) do
+    selected_category = if category == "", do: nil, else: category
+
+    socket =
+      socket
+      |> assign(:selected_category, selected_category)
+      |> filter_events()
+
+    {:noreply, socket}
+  end
+
+  defp filter_events(socket) do
+    search_query = String.downcase(socket.assigns.search_query)
+    selected_category = socket.assigns.selected_category
+    today = socket.assigns.current_date
+    all_events = socket.assigns[:all_events] || Events.list_events()
+
+    filtered_events =
+      all_events
+      |> filter_by_search(search_query)
+      |> filter_by_category(selected_category)
+
+    {upcoming_events, past_events} =
+      Enum.split_with(filtered_events, fn event ->
+        if event.start_date do
+          Date.compare(event.start_date, today) != :lt
+        else
+          true
+        end
+      end)
+
+    events_by_date = group_events_by_date(filtered_events)
+
+    socket
+    |> assign(:upcoming_events, upcoming_events)
+    |> assign(:past_events, past_events)
+    |> assign(:events_by_date, events_by_date)
+  end
+
+  defp filter_by_search(events, ""), do: events
+  defp filter_by_search(events, search_query) do
+    Enum.filter(events, fn event ->
+      name_match = event.name && String.contains?(String.downcase(event.name), search_query)
+      location_match = event.location && String.contains?(String.downcase(event.location), search_query)
+      tags_match = event.tags && Enum.any?(event.tags, fn tag -> String.contains?(String.downcase(tag), search_query) end)
+
+      name_match || location_match || tags_match
+    end)
+  end
+
+  defp filter_by_category(events, nil), do: events
+  defp filter_by_category(events, category) do
+    Enum.filter(events, fn event ->
+      event.tags && Enum.member?(event.tags, category)
+    end)
+  end
+
+  defp extract_categories(events) do
+    events
+    |> Enum.flat_map(fn event -> event.tags || [] end)
+    |> Enum.uniq()
+    |> Enum.sort()
+  end
+
   defp load_events(socket) do
     events = Events.list_events()
     events_by_date = group_events_by_date(events)
@@ -91,6 +197,7 @@ defmodule PtcWeb.CalendarLive do
     socket
     |> assign(:events_by_date, events_by_date)
     |> assign(:all_events, events)
+    |> assign(:filtered_events, events)
     |> update_month_events()
   end
 
